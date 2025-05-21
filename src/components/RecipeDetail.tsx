@@ -93,29 +93,34 @@ const RecipeDetails: React.FC = () => {
 
   return (
     <motion.div
-      className="bg-gray-50 min-h-screen py-8 px-4 sm:px-6 lg:px-8"
+      className="bg-gray-50 min-h-screen py-20 px-12 sm:px-6 lg:px-8"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.5 }}
     >
       <motion.div
-        className="max-w-4xl mx-auto bg-white rounded-xl shadow-md overflow-hidden"
+        className="max-w-6xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden flex flex-col md:flex-row"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ delay: 0.2 }}
       >
-        {/* Recipe Image */}
-        <motion.div className="relative h-64 sm:h-80 md:h-96" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>
+        {/* Left side - Recipe Image */}
+        <motion.div
+          className="md:w-1/2 relative h-64 sm:h-80 md:h-auto"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.3 }}
+        >
           <motion.img
             src={recipe.image}
             alt={recipe.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover rounded-l-xl"
             initial={{ scale: 1.1 }}
             animate={{ scale: 1 }}
             transition={{ duration: 0.8 }}
           />
           <motion.div
-            className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4"
+            className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4 rounded-bl-xl"
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
             transition={{ delay: 0.5 }}
@@ -136,23 +141,24 @@ const RecipeDetails: React.FC = () => {
           </motion.div>
         </motion.div>
 
-        {/* Recipe Meta */}
-        <motion.div className="p-6 grid grid-cols-2 sm:grid-cols-4 gap-4 border-b" variants={container} initial="hidden" animate="show">
-          {[
-            { label: 'Prep Time', value: `${recipe.prepTimeMinutes} mins` },
-            { label: 'Cook Time', value: `${recipe.cookTimeMinutes} mins` },
-            { label: 'Servings', value: recipe.servings },
-            { label: 'Calories', value: `${recipe.caloriesPerServing} kcal` }
-          ].map((meta, index) => (
-            <motion.div key={index} className="text-center" variants={item}>
-              <div className="text-gray-500 text-sm">{meta.label}</div>
-              <div className="font-semibold">{meta.value}</div>
-            </motion.div>
-          ))}
-        </motion.div>
+        {/* Right side - Recipe Details */}
+        <motion.div className="md:w-1/2 p-6 overflow-hidden max-h-[110vh]" variants={container} initial="hidden" animate="show">
+          {/* Recipe Meta */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 border-b pb-4 mb-4">
+            {[
+              { label: 'Prep Time', value: `${recipe.prepTimeMinutes} mins` },
+              { label: 'Cook Time', value: `${recipe.cookTimeMinutes} mins` },
+              { label: 'Servings', value: recipe.servings },
+              { label: 'Calories', value: `${recipe.caloriesPerServing} kcal` }
+            ].map((meta, index) => (
+              <motion.div key={index} className="text-center" variants={item}>
+                <div className="text-gray-500 text-sm">{meta.label}</div>
+                <div className="font-semibold">{meta.value}</div>
+              </motion.div>
+            ))}
+          </div>
 
-        {/* Recipe Details */}
-        <div className="p-6">
+          {/* Tags */}
           <motion.div className="flex flex-wrap gap-2 mb-6" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }}>
             <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">{recipe.cuisine}</span>
             <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">{recipe.difficulty}</span>
@@ -196,7 +202,7 @@ const RecipeDetails: React.FC = () => {
               ))}
             </motion.ol>
           </motion.div>
-        </div>
+        </motion.div>
       </motion.div>
     </motion.div>
   );

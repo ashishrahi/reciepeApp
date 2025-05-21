@@ -51,7 +51,7 @@ const Category = () => {
       transition={{ duration: 0.6 }}
     >
       <motion.h2
-        className="text-3xl font-bold mb-4 text-gray-800 text-center mt-2"
+        className="text-3xl font-bold mb-4 text-gray-800 text-center "
         initial={{ x: -50, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ delay: 0.2, duration: 0.6 }}

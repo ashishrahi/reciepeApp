@@ -5,6 +5,8 @@ import RecipePage from './pages/RecipePage';
 import RecipeDetails from './components/RecipeDetail';
 import Header from './components/Header'
 import HomePage from './pages/HomePage';
+import UserProfile from './components/UserProfile';
+import RecipeList from './components/Recipe';
 // 
 function App() {
   return (
@@ -12,6 +14,8 @@ function App() {
       <Routes>
         <Route path="/" element={<MainLayout />}>
           <Route path='/home' element={<HomePage />} />
+          <Route path='/profile' element={<UserProfile />} />
+          <Route path="/recipes" element={<RecipeList />} />
           <Route path="/recipes/:id" element={<RecipeDetails />} />
 
         </Route>
