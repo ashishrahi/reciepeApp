@@ -8,13 +8,13 @@ const MainLayout: React.FC = () => {
   const navigate = useNavigate();
 
   const handleAddRecipe = () => {
-    navigate("/add-recipe"); // Change this path to your route
+    navigate("/recipes/newrecipe"); // Change this path to your route
   };
 
   return (
     <div className="flex flex-col min-h-screen relative">
       <Navbar />
-      <main className="flex-grow mt-5 ">
+      <main className="flex-grow mt-12">
         <Outlet />
       </main>
       <Footer />
