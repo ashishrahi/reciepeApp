@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AddNewRecipes } from '../api/newRecipie.api';
 
 interface Recipe {
   name: string;
@@ -14,6 +15,9 @@ interface Recipe {
   mealType: string[];
   image?: string;
 }
+
+const difficultyOptions = ['Easy', 'Medium', 'Hard'];
+const mealTypeOptions = ['Breakfast', 'Lunch', 'Dinner', 'Snack'];
 
 const RecipeAddForm: React.FC = () => {
   const [recipe, setRecipe] = useState<Recipe>({
@@ -34,6 +38,7 @@ const RecipeAddForm: React.FC = () => {
   const [newTag, setNewTag] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -49,7 +54,7 @@ const RecipeAddForm: React.FC = () => {
     if (newIngredient.trim()) {
       setRecipe({
         ...recipe,
-        ingredients: [...recipe.ingredients, newIngredient.trim()]
+        ingredients: [...recipe.ingredients.filter(ing => ing.trim() !== ''), newIngredient.trim()]
       });
       setNewIngredient('');
     }
@@ -58,14 +63,14 @@ const RecipeAddForm: React.FC = () => {
   const handleRemoveIngredient = (index: number) => {
     const updatedIngredients = [...recipe.ingredients];
     updatedIngredients.splice(index, 1);
-    setRecipe({ ...recipe, ingredients: updatedIngredients });
+    setRecipe({ ...recipe, ingredients: updatedIngredients.length > 0 ? updatedIngredients : [''] });
   };
 
   const handleAddInstruction = () => {
     if (newInstruction.trim()) {
       setRecipe({
         ...recipe,
-        instructions: [...recipe.instructions, newInstruction.trim()]
+        instructions: [...recipe.instructions.filter(inst => inst.trim() !== ''), newInstruction.trim()]
       });
       setNewInstruction('');
     }
@@ -74,11 +79,11 @@ const RecipeAddForm: React.FC = () => {
   const handleRemoveInstruction = (index: number) => {
     const updatedInstructions = [...recipe.instructions];
     updatedInstructions.splice(index, 1);
-    setRecipe({ ...recipe, instructions: updatedInstructions });
+    setRecipe({ ...recipe, instructions: updatedInstructions.length > 0 ? updatedInstructions : [''] });
   };
 
   const handleAddTag = () => {
-    if (newTag.trim()) {
+    if (newTag.trim() && !recipe.tags.includes(newTag.trim())) {
       setRecipe({
         ...recipe,
         tags: [...recipe.tags, newTag.trim()]
@@ -95,35 +100,82 @@ const RecipeAddForm: React.FC = () => {
 
   const handleMealTypeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value, checked } = e.target;
-    if (checked) {
-      setRecipe({
-        ...recipe,
-        mealType: [...recipe.mealType, value]
-      });
-    } else {
-      setRecipe({
-        ...recipe,
-        mealType: recipe.mealType.filter(type => type !== value)
-      });
+    setRecipe({
+      ...recipe,
+      mealType: checked
+        ? [...recipe.mealType, value]
+        : recipe.mealType.filter(type => type !== value)
+    });
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setRecipe({
+          ...recipe,
+          image: reader.result as string
+        });
+      };
+      reader.readAsDataURL(file);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     setIsSubmitting(true);
     
     try {
-      const response = await fetch('https://dummyjson.com/recipes/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(recipe)
-      });
+      // Clean up empty strings from arrays
+      const cleanedRecipe = {
+        ...recipe,
+        ingredients: recipe.ingredients.filter(ing => ing.trim() !== ''),
+        instructions: recipe.instructions.filter(inst => inst.trim() !== '')
+      };
+
+      // Basic validation
+      if (!cleanedRecipe.name.trim()) {
+        throw new Error('Recipe name is required');
+      }
+      if (cleanedRecipe.ingredients.length === 0) {
+        throw new Error('At least one ingredient is required');
+      }
+      if (cleanedRecipe.instructions.length === 0) {
+        throw new Error('At least one instruction is required');
+      }
+
+      const response = await AddNewRecipes(cleanedRecipe);
       
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to add recipe');
+      }
+
       const data = await response.json();
       console.log('Recipe added successfully:', data);
       setSubmitSuccess(true);
-    } catch (error) {
-      console.error('Error adding recipe:', error);
+      
+      // Reset form after successful submission
+      setRecipe({
+        name: '',
+        ingredients: [''],
+        instructions: [''],
+        prepTimeMinutes: 0,
+        cookTimeMinutes: 0,
+        servings: 1,
+        difficulty: 'Easy',
+        cuisine: '',
+        caloriesPerServing: 0,
+        tags: [],
+        mealType: [],
+        image: ''
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Failed to add recipe';
+      setError(message);
+      console.error('Error adding recipe:', err);
     } finally {
       setIsSubmitting(false);
     }
@@ -164,10 +216,21 @@ const RecipeAddForm: React.FC = () => {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6">
+                {error && (
+                  <div className="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg">
+                    <div className="flex items-center">
+                      <svg className="h-5 w-5 text-red-500 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                      </svg>
+                      <span>{error}</span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 p-4 rounded-lg shadow-inner border border-yellow-200">
                     <label htmlFor="name" className="block text-sm font-medium text-yellow-800 mb-1">
-                      Recipe Name
+                      Recipe Name*
                     </label>
                     <input
                       type="text"
@@ -182,7 +245,7 @@ const RecipeAddForm: React.FC = () => {
 
                   <div className="bg-gradient-to-r from-red-50 to-red-100 p-4 rounded-lg shadow-inner border border-red-200">
                     <label htmlFor="cuisine" className="block text-sm font-medium text-red-800 mb-1">
-                      Cuisine
+                      Cuisine*
                     </label>
                     <input
                       type="text"
@@ -197,21 +260,23 @@ const RecipeAddForm: React.FC = () => {
                 </div>
 
                 <div className="bg-gradient-to-r from-pink-50 to-pink-100 p-4 rounded-lg shadow-inner border border-pink-200">
-                  <label className="block text-sm font-medium text-pink-800 mb-2">Ingredients</label>
+                  <label className="block text-sm font-medium text-pink-800 mb-2">Ingredients*</label>
                   <ul className="space-y-2 mb-4">
                     {recipe.ingredients.map((ingredient, index) => (
-                      <li key={index} className="flex items-center justify-between bg-white/80 p-3 rounded-md shadow-xs border border-pink-200">
-                        <span className="text-gray-800">{ingredient}</span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveIngredient(index)}
-                          className="text-pink-600 hover:text-pink-800 p-1 rounded-full hover:bg-pink-100"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                      </li>
+                      ingredient.trim() && (
+                        <li key={index} className="flex items-center justify-between bg-white/80 p-3 rounded-md shadow-xs border border-pink-200">
+                          <span className="text-gray-800">{ingredient}</span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveIngredient(index)}
+                            className="text-pink-600 hover:text-pink-800 p-1 rounded-full hover:bg-pink-100"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        </li>
+                      )
                     ))}
                   </ul>
                   <div className="flex space-x-2">
@@ -236,26 +301,28 @@ const RecipeAddForm: React.FC = () => {
                 </div>
 
                 <div className="bg-gradient-to-r from-purple-50 to-purple-100 p-4 rounded-lg shadow-inner border border-purple-200">
-                  <label className="block text-sm font-medium text-purple-800 mb-2">Instructions</label>
+                  <label className="block text-sm font-medium text-purple-800 mb-2">Instructions*</label>
                   <ol className="space-y-3 mb-4">
                     {recipe.instructions.map((instruction, index) => (
-                      <li key={index} className="flex items-start justify-between bg-white/80 p-3 rounded-md shadow-xs border border-purple-200">
-                        <div className="flex items-start">
-                          <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-purple-100 text-purple-800 font-medium text-sm mr-3">
-                            {index + 1}
-                          </span>
-                          <span className="text-gray-800 flex-1">{instruction}</span>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveInstruction(index)}
-                          className="text-purple-600 hover:text-purple-800 p-1 rounded-full hover:bg-purple-100 ml-2"
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                          </svg>
-                        </button>
-                      </li>
+                      instruction.trim() && (
+                        <li key={index} className="flex items-start justify-between bg-white/80 p-3 rounded-md shadow-xs border border-purple-200">
+                          <div className="flex items-start">
+                            <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-purple-100 text-purple-800 font-medium text-sm mr-3">
+                              {index + 1}
+                            </span>
+                            <span className="text-gray-800 flex-1">{instruction}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveInstruction(index)}
+                            className="text-purple-600 hover:text-purple-800 p-1 rounded-full hover:bg-purple-100 ml-2"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                            </svg>
+                          </button>
+                        </li>
+                      )
                     ))}
                   </ol>
                   <div className="flex flex-col space-y-2">
@@ -282,7 +349,7 @@ const RecipeAddForm: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-lg shadow-inner border border-blue-200">
                     <label htmlFor="prepTimeMinutes" className="block text-sm font-medium text-blue-800 mb-1">
-                      Prep Time (minutes)
+                      Prep Time (minutes)*
                     </label>
                     <input
                       type="number"
@@ -298,7 +365,7 @@ const RecipeAddForm: React.FC = () => {
 
                   <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 p-4 rounded-lg shadow-inner border border-indigo-200">
                     <label htmlFor="cookTimeMinutes" className="block text-sm font-medium text-indigo-800 mb-1">
-                      Cook Time (minutes)
+                      Cook Time (minutes)*
                     </label>
                     <input
                       type="number"
@@ -314,7 +381,7 @@ const RecipeAddForm: React.FC = () => {
 
                   <div className="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-lg shadow-inner border border-green-200">
                     <label htmlFor="servings" className="block text-sm font-medium text-green-800 mb-1">
-                      Servings
+                      Servings*
                     </label>
                     <input
                       type="number"
@@ -330,7 +397,7 @@ const RecipeAddForm: React.FC = () => {
 
                   <div className="bg-gradient-to-r from-amber-50 to-amber-100 p-4 rounded-lg shadow-inner border border-amber-200">
                     <label htmlFor="caloriesPerServing" className="block text-sm font-medium text-amber-800 mb-1">
-                      Calories per Serving
+                      Calories per Serving*
                     </label>
                     <input
                       type="number"
@@ -347,16 +414,17 @@ const RecipeAddForm: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-gradient-to-r from-cyan-50 to-cyan-100 p-4 rounded-lg shadow-inner border border-cyan-200">
-                    <label className="block text-sm font-medium text-cyan-800 mb-1">Difficulty</label>
+                    <label className="block text-sm font-medium text-cyan-800 mb-1">Difficulty*</label>
                     <select
                       name="difficulty"
                       value={recipe.difficulty}
                       onChange={handleInputChange}
                       className="w-full px-3 py-2 border border-cyan-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-cyan-500 bg-white/80"
+                      required
                     >
-                      <option value="Easy">Easy</option>
-                      <option value="Medium">Medium</option>
-                      <option value="Hard">Hard</option>
+                      {difficultyOptions.map(option => (
+                        <option key={option} value={option}>{option}</option>
+                      ))}
                     </select>
                   </div>
 
@@ -396,9 +464,9 @@ const RecipeAddForm: React.FC = () => {
                 </div>
 
                 <div className="bg-gradient-to-r from-violet-50 to-violet-100 p-4 rounded-lg shadow-inner border border-violet-200">
-                  <label className="block text-sm font-medium text-violet-800 mb-2">Meal Type</label>
+                  <label className="block text-sm font-medium text-violet-800 mb-2">Meal Type*</label>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {['Breakfast', 'Lunch', 'Dinner', 'Snack'].map((type) => (
+                    {mealTypeOptions.map((type) => (
                       <label key={type} className="inline-flex items-center">
                         <input
                           type="checkbox"
@@ -415,16 +483,29 @@ const RecipeAddForm: React.FC = () => {
 
                 <div className="bg-gradient-to-r from-sky-50 to-sky-100 p-4 rounded-lg shadow-inner border border-sky-200">
                   <label htmlFor="image" className="block text-sm font-medium text-sky-800 mb-1">
-                    Image URL (optional)
+                    Image
                   </label>
-                  <input
-                    type="text"
-                    id="image"
-                    name="image"
-                    value={recipe.image || ''}
-                    onChange={(e) => setRecipe({...recipe, image: e.target.value})}
-                    className="w-full px-3 py-2 border border-sky-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white/80"
-                  />
+                  {recipe.image ? (
+                    <div className="mb-3">
+                      <img src={recipe.image} alt="Preview" className="h-32 w-32 object-cover rounded-md" />
+                      <button
+                        type="button"
+                        onClick={() => setRecipe({...recipe, image: ''})}
+                        className="mt-2 text-sm text-red-600 hover:text-red-800"
+                      >
+                        Remove Image
+                      </button>
+                    </div>
+                  ) : (
+                    <input
+                      type="file"
+                      id="image"
+                      name="image"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className="w-full px-3 py-2 border border-sky-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-sky-500 bg-white/80"
+                    />
+                  )}
                 </div>
 
                 <div className="pt-4">

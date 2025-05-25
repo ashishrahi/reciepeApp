@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { fetchRecipes } from '../api/recipie';
+import { fetchRecipes } from '../api/recipie.api';
 import { motion } from 'framer-motion';
 import { FaClock, FaUsers, FaFire } from 'react-icons/fa';
 
@@ -78,7 +78,7 @@ const RecipeList: React.FC = () => {
       </div>
 
       {filteredRecipes.length === 0 ? (
-        <p className="text-center text-gray-500">No recipes found.</p>
+        <p className="text-center text-gray-500">recipies is loading.........</p>
       ) : (
         <motion.div
           className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"

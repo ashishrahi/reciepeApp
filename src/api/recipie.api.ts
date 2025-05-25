@@ -11,26 +11,10 @@ import axiosClient from './apiConfig';
   carbs: string;
 }
 
-interface FetchRecipesParams {
-  minFat?: number;
-  maxFat?: number;
-  maxCalories?: number;
-  maxSugar?: number;
-  [key: string]: any;
-}
-
 export const fetchRecipes = async (
-//   params: FetchRecipesParams = {}
 ): Promise<Recipe[]> => {
-//   const defaultParams = {
-//     number: 10,
-//     minFat: 5,
-//     maxFat: 20,
-//     maxCalories: 250,
-//   };
 
   const response = await axiosClient.get<Recipe[]>('/recipes', {
-    // params: { ...defaultParams, ...params },
   }
 );
 
