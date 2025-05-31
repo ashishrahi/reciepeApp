@@ -25,3 +25,4 @@ dist-ssr
 git rm --cached .env
 echo ".env" >> .gitignore
 .env
+.env
