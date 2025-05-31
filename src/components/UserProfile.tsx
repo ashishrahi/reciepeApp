@@ -1,51 +1,50 @@
-import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
 import type { RootState } from "../features/store";
 
-interface User {
-  firstName: string;
-  lastName: string;
-  age: number;
-  email: string;
-  phone: string;
-  image: string;
-  gender: string;
-  username: string;
-  birthDate: string;
-  role: string;
-  address: {
-    address: string;
-    city: string;
-    state: string;
-    country: string;
-    postalCode: string;
-  };
-  company: {
-    name: string;
-    title: string;
-    department: string;
-  };
-  university: string;
-  bloodGroup: string;
-  height: number;
-  weight: number;
-  eyeColor: string;
-  hair: {
-    color: string;
-    type: string;
-  };
-  bank: {
-    cardNumber: string;
-    cardType: string;
-    cardExpire: string;
-  };
-  crypto: {
-    coin: string;
-    wallet: string;
-    network: string;
-  };
-}
+// interface User {
+//   firstName: string;
+//   lastName: string;
+//   age: number;
+//   email: string;
+//   phone: string;
+//   image: string;
+//   gender: string;
+//   username: string;
+//   birthDate: string;
+//   role: string;
+//   address: {
+//     address: string;
+//     city: string;
+//     state: string;
+//     country: string;
+//     postalCode: string;
+//   };
+//   company: {
+//     name: string;
+//     title: string;
+//     department: string;
+//   };
+//   university: string;
+//   bloodGroup: string;
+//   height: number;
+//   weight: number;
+//   eyeColor: string;
+//   hair: {
+//     color: string;
+//     type: string;
+//   };
+//   bank: {
+//     cardNumber: string;
+//     cardType: string;
+//     cardExpire: string;
+//   };
+//   crypto: {
+//     coin: string;
+//     wallet: string;
+//     network: string;
+//   };
+// }
 
 const UserProfile = () => {
   // const [user, setUser] = useState<User | null>(null);

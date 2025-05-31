@@ -1,5 +1,5 @@
 import  { useEffect, useState } from "react";
-import Slider from "react-slick";
+import  Slider from "react-slick";
 import { motion } from "framer-motion";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";

@@ -14,7 +14,7 @@ interface Recipe {
   servings: string;
   fat?: string;
   difficulty: string;
-  recipes?: string;
+  recipes?: [];
 }
 
 const containerVariants = {
@@ -41,7 +41,8 @@ const RecipeList: React.FC = () => {
     const load = async () => {
       try {
         const data = await fetchRecipes();
-        setRecipes(data.recipes);
+        const recipeData =data.recipes
+        setRecipes(recipeData);
       } catch (err) {
         console.error(err);
       }

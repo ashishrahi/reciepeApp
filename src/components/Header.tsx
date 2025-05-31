@@ -245,7 +245,7 @@ const HeaderWithFoodItems = () => {
       </div>
 
       {/* Animation Styles */}
-      <style jsx>{`
+      <style>{`
         .food-illustrations {
           perspective: 1000px;
         }

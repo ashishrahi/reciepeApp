@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaStar, FaRegStar } from 'react-icons/fa';
+import { FaStar, FaRegStar, FaFilePdf } from 'react-icons/fa';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface Recipe {
   id: number;
@@ -28,6 +30,7 @@ const RecipeDetails: React.FC = () => {
   const [recipe, setRecipe] = useState<Recipe | null>(location.state?.recipe || null);
   const [loading, setLoading] = useState<boolean>(!recipe);
   const [error, setError] = useState<string | null>(null);
+  const pdfRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (recipe) return;
@@ -49,6 +52,20 @@ const RecipeDetails: React.FC = () => {
 
     fetchRecipe();
   }, [id, recipe]);
+
+  const handleExportPDF = async () => {
+    if (!pdfRef.current) return;
+
+    const canvas = await html2canvas(pdfRef.current, { scale: 2 });
+    const imgData = canvas.toDataURL('image/png');
+
+    const pdf = new jsPDF('p', 'mm', 'a4');
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+    pdf.save(`${recipe?.name || 'recipe-details'}.pdf`);
+  };
 
   if (loading) {
     return (
@@ -82,23 +99,37 @@ const RecipeDetails: React.FC = () => {
     hidden: { opacity: 0 },
     show: {
       opacity: 1,
-      transition: { staggerChildren: 0.1 }
-    }
+      transition: { staggerChildren: 0.1 },
+    },
   };
 
   const item = {
     hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0 }
+    show: { opacity: 1, y: 0 },
   };
 
   return (
-    <motion.div
-      className="bg-gray-50 min-h-screen py-20 px-12 sm:px-6 lg:px-8"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
+    <motion.div className="bg-gray-50 min-h-screen py-20 px-12 sm:px-6 lg:px-8" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+      
+      {/* Animated Export PDF Icon */}
+      <div className="max-w-6xl mx-auto mb-6 flex justify-end">
+        <motion.div
+          onClick={handleExportPDF}
+          whileHover={{ scale: 1.2, color: 'red' }}  // blue-600
+          whileTap={{ scale: 0.9 }}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleExportPDF(); }}
+          aria-label="Download recipe as PDF"
+          className="cursor-pointer text-red-500 text-4xl  rounded p-2 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-700"
+        >
+          <FaFilePdf />
+        </motion.div>
+      </div>
+
+      {/* Content to Export */}
       <motion.div
+        ref={pdfRef}
         className="max-w-6xl mx-auto bg-white rounded-xl shadow-lg overflow-hidden flex flex-col md:flex-row"
         initial={{ y: -20, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -149,7 +180,7 @@ const RecipeDetails: React.FC = () => {
               { label: 'Prep Time', value: `${recipe.prepTimeMinutes} mins` },
               { label: 'Cook Time', value: `${recipe.cookTimeMinutes} mins` },
               { label: 'Servings', value: recipe.servings },
-              { label: 'Calories', value: `${recipe.caloriesPerServing} kcal` }
+              { label: 'Calories', value: `${recipe.caloriesPerServing} kcal` },
             ].map((meta, index) => (
               <motion.div key={index} className="text-center" variants={item}>
                 <div className="text-gray-500 text-sm">{meta.label}</div>
@@ -197,7 +228,7 @@ const RecipeDetails: React.FC = () => {
                   <span className="flex-shrink-0 flex items-center justify-center w-8 h-8 bg-blue-500 text-white rounded-full mr-3 font-medium">
                     {index + 1}
                   </span>
-                  <span className="text-gray-700">{step}</span>
+                  <p className="text-gray-700">{step}</p>
                 </motion.li>
               ))}
             </motion.ol>
