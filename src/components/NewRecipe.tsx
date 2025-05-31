@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AddNewRecipes } from '../api/newRecipie.api';
+// import { AddNewRecipes } from '../api/newRecipie.api';
 
 interface Recipe {
   name: string;
@@ -146,15 +146,14 @@ const RecipeAddForm: React.FC = () => {
         throw new Error('At least one instruction is required');
       }
 
-      const response = await AddNewRecipes(cleanedRecipe);
+      // const response = await AddNewRecipes(cleanedRecipe);
       
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to add recipe');
-      }
+      // if (!response.ok) {
+      //   const errorData = await response.json();
+      //   throw new Error(errorData.message || 'Failed to add recipe');
+      // }
 
-      const data = await response.json();
-      console.log('Recipe added successfully:', data);
+      // const data = await response.json();
       setSubmitSuccess(true);
       
       // Reset form after successful submission

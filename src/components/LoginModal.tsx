@@ -44,7 +44,12 @@ const LoginModal: React.FC<LoginModalProps> = ({ onClose, onLoginSuccess }) => {
         toast.error('Login failed. Please try again.');
       }
     } catch (error) {
-      toast.error(error.response.message);
+      if (typeof error === 'object' && error !== null && 'response' in error) {
+    const err = error as { response: { message: string } };
+    toast.error(err.response.message);
+  } else {
+    toast.error('An unexpected error occurred');
+  }
     } finally {
       setLoading(false);
     }

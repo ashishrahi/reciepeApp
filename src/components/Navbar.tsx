@@ -54,7 +54,7 @@ const Navbar: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [menuOpen]);
 
-  const handleLoginSuccess = (userData: { name: string; avatar: string }) => {
+  const handleLoginSuccess = () => {
     // Normally you'd dispatch a Redux action here to save user info
     // For example: dispatch(login(userData));
     // Then close modal
@@ -212,7 +212,7 @@ const Navbar: React.FC = () => {
                 <Link
                   to="/profile"
                   onClick={() => setMenuOpen(false)}
-                  className="block px-4 py-3 text-yellow-800 hover:bg-yellow-200 rounded-md transition-all duration-200 transform hover:scale-105 flex items-center gap-3"
+                  className=" px-4 py-3 text-yellow-800 hover:bg-yellow-200 rounded-md transition-all duration-200 transform hover:scale-105 flex items-center gap-3"
                 >
                   <FiUser className="text-lg" />
                   Profile
@@ -220,14 +220,14 @@ const Navbar: React.FC = () => {
                 <Link
                   to="/settings"
                   onClick={() => setMenuOpen(false)}
-                  className="block px-4 py-3 text-yellow-800 hover:bg-yellow-200 rounded-md transition-all duration-200 transform hover:scale-105 flex items-center gap-3"
+                  className="px-4 py-3 text-yellow-800 hover:bg-yellow-200 rounded-md transition-all duration-200 transform hover:scale-105 flex items-center gap-3"
                 >
                   <FiSettings className="text-lg" />
                   Settings
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="block w-full text-left px-4 py-3 text-red-600 hover:bg-red-100 rounded-md transition-all duration-200 transform hover:scale-105 flex items-center gap-3"
+                  className="w-full text-left px-4 py-3 text-red-600 hover:bg-red-100 rounded-md transition-all duration-200 transform hover:scale-105 flex items-center gap-3"
                 >
                   <FiLogOut className="text-lg" />
                   Logout
@@ -239,7 +239,7 @@ const Navbar: React.FC = () => {
                   setLoginModalOpen(true);
                   setMenuOpen(false);
                 }}
-                className="block w-full text-left px-4 py-3 text-yellow-800 hover:bg-yellow-200 rounded-md transition-all duration-200 transform hover:scale-105 flex items-center gap-3"
+                className="w-full text-left px-4 py-3 text-yellow-800 hover:bg-yellow-200 rounded-md transition-all duration-200 transform hover:scale-105 flex items-center gap-3"
               >
                 <FiLogIn className="text-lg" />
                 Login
