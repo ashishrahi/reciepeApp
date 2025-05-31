@@ -4,19 +4,6 @@ import { fetchRecipes } from '../api/recipie.api';
 import { motion } from 'framer-motion';
 import { FaClock, FaUsers, FaFire } from 'react-icons/fa';
 
-interface Recipe {
-  id: number;
-  name?: string;   // optional
-  title?: string;  // optional alternative
-  image: string;
-  prepTimeMinutes: string;
-  cookTimeMinutes: number;
-  servings: string;
-  fat?: string;
-  difficulty: string;
-  recipes?: [];
-}
-
 const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
@@ -32,34 +19,68 @@ const cardVariants = {
   visible: { opacity: 1, y: 0 }
 };
 
+interface Recipe {
+  id: number;
+  name?: string;
+  title?: string;
+  image: string;
+  prepTimeMinutes: number; // Changed from string to number
+  cookTimeMinutes: number;
+  servings: number; // Changed from string to number
+  calories?: number;
+  fat?: number;
+  difficulty: string;
+}
+
 const RecipeList: React.FC = () => {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    const load = async () => {
+    const loadRecipes = async () => {
       try {
+        setIsLoading(true);
         const data = await fetchRecipes();
-        const recipeData =data.recipes
-        setRecipes(recipeData);
+        setRecipes(data);
       } catch (err) {
-        console.error(err);
+        setError('Failed to load recipes. Please try again later.');
+        console.error('Error fetching recipes:', err);
+      } finally {
+        setIsLoading(false);
       }
     };
-    load();
+    
+    loadRecipes();
   }, []);
 
-  // Filter recipes based on search query (case insensitive)
   const filteredRecipes = recipes.filter((recipe) => {
     const name = recipe.name || recipe.title || '';
     return name.toLowerCase().includes(searchQuery.toLowerCase());
   });
 
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p className="text-center text-gray-500">Loading recipes...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <p className="text-center text-red-500">{error}</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-10">
+    <div className="p-4 md:p-10">
       <motion.h1
-        className="text-3xl font-bold mb-6 ml-8 text-center text-gray-800"
+        className="text-3xl font-bold mb-6 text-center text-gray-800"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
@@ -67,7 +88,6 @@ const RecipeList: React.FC = () => {
         Recipe List
       </motion.h1>
 
-      {/* Search input field */}
       <div className="mb-6 flex justify-center">
         <input
           type="text"
@@ -79,7 +99,7 @@ const RecipeList: React.FC = () => {
       </div>
 
       {filteredRecipes.length === 0 ? (
-        <p className="text-center text-gray-500">recipies is loading.........</p>
+        <p className="text-center text-gray-500">No recipes found matching your search.</p>
       ) : (
         <motion.div
           className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"
@@ -96,27 +116,33 @@ const RecipeList: React.FC = () => {
                 variants={cardVariants}
                 whileHover={{ scale: 1.05 }}
                 onClick={() => navigate(`/recipes/${recipe.id}`)}
-                className="cursor-pointer border border-gray-300 rounded-lg shadow-md p-4 bg-white transition-transform duration-300 ease-in-out"
+                className="cursor-pointer border border-gray-200 rounded-lg shadow-md overflow-hidden bg-white transition-transform duration-300 ease-in-out hover:shadow-lg"
               >
-                <h2 className="text-xl font-semibold mb-2 text-yellow-600">{recipeName}</h2>
-
                 <img
                   src={recipe.image}
                   alt={recipeName}
-                  className="w-full h-40 object-cover rounded-md mb-3"
+                  className="w-full h-48 object-cover"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = '/placeholder-recipe.jpg';
+                  }}
                 />
-                <p className="text-sm text-gray-700 flex items-center gap-2">
-                  <FaClock className="text-blue-500" /> Prep time: {recipe.prepTimeMinutes} mins
-                </p>
-                <p className="text-sm text-gray-700 flex items-center gap-2">
-                  <FaClock className="text-blue-500" /> Cook time: {recipe.cookTimeMinutes} mins
-                </p>
-                <p className="text-sm text-gray-700 flex items-center gap-2">
-                  <FaUsers className="text-green-500" /> Servings: {recipe.servings}
-                </p>
-                <p className="text-sm text-gray-700 flex items-center gap-2">
-                  <FaFire className="text-red-500" /> Difficulty: {recipe.difficulty}
-                </p>
+                <div className="p-4">
+                  <h2 className="text-xl font-semibold mb-2 text-yellow-600 truncate">{recipeName}</h2>
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-700 flex items-center gap-2">
+                      <FaClock className="text-blue-500" /> 
+                      Prep: {recipe.prepTimeMinutes} min | Cook: {recipe.cookTimeMinutes} min
+                    </p>
+                    <p className="text-sm text-gray-700 flex items-center gap-2">
+                      <FaUsers className="text-green-500" /> 
+                      Servings: {recipe.servings}
+                    </p>
+                    <p className="text-sm text-gray-700 flex items-center gap-2">
+                      <FaFire className="text-red-500" /> 
+                      Difficulty: {recipe.difficulty}
+                    </p>
+                  </div>
+                </div>
               </motion.div>
             );
           })}

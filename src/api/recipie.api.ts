@@ -1,22 +1,26 @@
 import axiosClient from './apiConfig';
 
- interface Recipe {
-  id: number;
-  title: string;
-  image: string;
-  imageType: string;
-  calories: number;
-  protein: string;
-  fat: string;
-  carbs: string;
+interface RecipeResponse {
+  recipes: Recipe[];
+  total: number;
+  skip: number;
+  limit: number;
 }
 
-export const fetchRecipes = async (
-): Promise<Recipe[]> => {
-
-  const response = await axiosClient.get<Recipe[]>('/recipes', {
-  }
-);
-
-  return response.data;
+export const fetchRecipes = async (): Promise<Recipe[]> => {
+  const response = await axiosClient.get<RecipeResponse>('/recipes');
+  return response.data.recipes; // Changed to access the recipes array
 };
+
+interface Recipe {
+  id: number;
+  name?: string;
+  title?: string;
+  image: string;
+  prepTimeMinutes: number; // Changed from string to number
+  cookTimeMinutes: number;
+  servings: number; // Changed from string to number
+  calories?: number;
+  fat?: number;
+  difficulty: string;
+}
