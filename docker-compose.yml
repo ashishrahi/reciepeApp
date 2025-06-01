@@ -1,0 +1,11 @@
+version: "3"
+services:
+  react-app:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app                # code from host
+      - /app/node_modules     # isolate container node_modules from host
+    stdin_open: true
+    tty: true
